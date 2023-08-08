@@ -37,19 +37,20 @@ def pd_parse_hsa(dfs, hid, h, v_lut):
     if hid in dfs[1].index.levels[0]:
       s = dfs[1].loc[hid, [v_lut['depth'], v_lut['brg'], v_lut['dip']]]
     else:
-      print(i0[0], "not found in SURVEY, using default 90°")
-      s = pd.DataFrame([[0, 0, -90]])
+      print(hid, "not found in SURVEY, using default 90°")
+      s = pd.DataFrame([[0, 0, -90]], columns=[v_lut['depth'], v_lut['brg'], v_lut['dip']])
 
     if hid not in dfs[2].index.levels[0]:
       print(hid, "not found in ASSAY, skipped")
       # TODO: use survey intervals
     else:
       a = dfs[2].loc[hid]
+
       # special case: assay intervals overshoots survey intervals
       if a.iloc[-1].loc[v_lut['to']] > s.iloc[-1].loc[v_lut['depth']]:
         row = s.iloc[-1].copy()
         row[v_lut['depth']] = a.iloc[-1].loc[v_lut['to']]
-        s = s.append(row)
+        s = pd.concat((s, pd.DataFrame.transpose(row.to_frame())))
   return h, s, a
 
 def desurvey_line3d(dfs, v_lut):
